@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إنشاء حساب أو تسجيل الدخول</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+        .container h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            text-align: center;
+        }
+        .container input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .container button:hover {
+            background-color: #45a049;
+        }
+        .toggle-btn {
+            background-color: #008CBA;
+            margin-top: 10px;
+        }
+        .toggle-btn:hover {
+            background-color: #007bb5;
+        }
+        .hidden {
+            display: none;
+        }
+        .dashboard {
+            display: none;
+            text-align: center;
+        }
+        .logout-btn {
+            background-color: #f44336;
+            color: white;
+            margin-top: 20px;
+        }
+        .logout-btn:hover {
+            background-color: #da190b;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2 id="formTitle">إنشاء حساب جديد</h2>
+
+        <!-- Sign Up Form -->
+        <form id="signupForm">
+            <input type="text" id="signupUsername" name="username" placeholder="اسم المستخدم" required>
+            <input type="email" id="signupEmail" name="email" placeholder="البريد الإلكتروني" required>
+            <input type="password" id="signupPassword" name="password" placeholder="كلمة المرور" required>
+            <button type="submit">تسجيل</button>
+        </form>
+
+        <!-- Sign In Form -->
+        <form id="signinForm" class="hidden">
+            <input type="text" id="signinUsername" name="username" placeholder="اسم المستخدم" required>
+            <input type="password" id="signinPassword" name="password" placeholder="كلمة المرور" required>
+            <button type="submit">دخول</button>
+        </form>
+
+        <!-- Toggle Button -->
+        <button class="toggle-btn" id="toggleFormBtn">لدي حساب بالفعل؟ تسجيل الدخول</button>
+    </div>
+
+    <div class="container dashboard" id="dashboard">
+        <h2>مرحبًا بك، <span id="userDisplayName"></span></h2>
+        <button class="logout-btn" id="logoutBtn">تسجيل الخروج</button>
+    </div>
+
+    <script>
+        const signupForm = document.getElementById('signupForm');
+        const signinForm = document.getElementById('signinForm');
+        const toggleFormBtn = document.getElementById('toggleFormBtn');
+        const formTitle = document.getElementById('formTitle');
+        const dashboard = document.getElementById('dashboard');
+        const userDisplayName = document.getElementById('userDisplayName');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // Toggle between Sign Up and Sign In forms
+        toggleFormBtn.addEventListener('click', function() {
+            if (signupForm.classList.contains('hidden')) {
+                signupForm.classList.remove('hidden');
+                signinForm.classList.add('hidden');
+                formTitle.textContent = 'إنشاء حساب جديد';
+                toggleFormBtn.textContent = 'لدي حساب بالفعل؟ تسجيل الدخول';
+            } else {
+                signupForm.classList.add('hidden');
+                signinForm.classList.remove('hidden');
+                formTitle.textContent = 'تسجيل الدخول';
+                toggleFormBtn.textContent = 'لا تملك حساب؟ إنشاء حساب جديد';
+            }
+        });
+
+        // Handle Sign Up
+        signupForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('signupUsername').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+
+            const signupData = {
+                username: username,
+                email: email,
+                password: password
+            };
+
+            fetch('http://localhost:3000/api/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(signupData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('تم إنشاء الحساب بنجاح!');
+                } else {
+                    alert('حدث خطأ أثناء إنشاء الحساب.');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        // Handle Sign In
+        signinForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('signinUsername').value;
+            const password = document.getElementById('signinPassword').value;
+
+            const signinData = {
+                username: username,
+                password: password
+            };
+
+            fetch('http://localhost:3000/api/signin', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(signinData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('تم تسجيل الدخول بنجاح!');
+                    localStorage.setItem('username', username);
+                    localStorage.setItem('loginTime', new Date().getTime());
+                    showDashboard(username);
+                } else {
+                    alert('اسم المستخدم أو كلمة المرور غير صحيحة.');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+        // Show dashboard after successful login
+        function showDashboard(username) {
+            document.querySelector('.container').style.display = 'none';
+            dashboard.style.display = 'block';
+            userDisplayName.textContent = username;
+            startSessionTimer();
+        }
+
+        // Handle Sign Out
+        logoutBtn.addEventListener('click', function() {
+            logout();
+        });
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('username');
+            localStorage.removeItem('loginTime');
+            alert('تم تسجيل الخروج بنجاح!');
+            location.reload();
+        }
+
+        // Session Timer (8 hours)
+        function startSessionTimer() {
+            const loginTime = localStorage.getItem('loginTime');
+            const sessionDuration = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
+            const currentTime = new Date().getTime();
+
+            if (currentTime - loginTime > sessionDuration) {
+                logout();
+            } else {
+                setTimeout(logout, sessionDuration - (currentTime - loginTime));
+            }
+        }
+
+        // Check if user is already logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const username = localStorage.getItem('username');
+            if (username) {
+                showDashboard(username);
+            }
+        });
+    </script>
+
+</body>
+</html>
